@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,13 +9,24 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:3000",
+            "http://localhost:5173",
             "http://localhost:3001",
             "http://localhost:3002",
             "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
             "http://127.0.0.1:3001",
             "http://127.0.0.1:3002",
+            "https://finance-dashboard-1-v9q8.onrender.com",
         ]
     )
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, str):
+            # Support comma-separated values in Render env settings.
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
 
     secret_key: str = "change-me-in-production"
     access_token_expire_minutes: int = 60
