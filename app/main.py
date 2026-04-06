@@ -1,8 +1,11 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.db.session import get_db
+from app.models.user import User
 from app.schemas.common import HealthResponse
 
 tags_metadata = [
@@ -46,18 +49,13 @@ def health_check() -> HealthResponse:
 
 
 @app.get("/make-admin")
-def make_admin():
-    import sqlite3
+def make_admin(email: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
 
-    conn = sqlite3.connect("finance_dashboard.db")
-    cursor = conn.cursor()
+    if not user:
+        return {"error": "User not found"}
 
-    cursor.execute(
-        "UPDATE users SET role = 'admin', status = 'active' WHERE email = ?",
-        ("abhishank123@gmail.com",)
-    )
+    user.role = "admin"
+    db.commit()
 
-    conn.commit()
-    conn.close()
-
-    return {"message": "User is now admin"}
+    return {"message": f"{email} is now admin"}
