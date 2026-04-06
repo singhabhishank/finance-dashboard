@@ -53,8 +53,8 @@ def make_admin():
     cursor = conn.cursor()
 
     cursor.execute(
-        "UPDATE users SET role = 'admin' WHERE email = ?",
-        ("abhi123@gmail.com",),
+        "UPDATE users SET role = 'admin', status = 'active' WHERE email = ?",
+        ("abhishank123@gmail.com",)
     )
 
     conn.commit()
