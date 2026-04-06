@@ -27,12 +27,21 @@ def create_admin():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT email FROM users WHERE email = ?", (email,))
+    cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
     existing = cursor.fetchone()
 
     if existing:
-        print(f"Admin already exists: {email}")
+        cursor.execute(
+            """
+            UPDATE users
+            SET full_name = ?, hashed_password = ?, role = ?, status = ?
+            WHERE email = ?
+            """,
+            (full_name, hashed_password, "admin", "active", email),
+        )
+        conn.commit()
         conn.close()
+        print(f"Admin updated successfully: {email}")
         return
 
     cursor.execute(
