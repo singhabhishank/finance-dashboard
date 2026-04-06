@@ -1,10 +1,9 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.db.session import get_db
+from app.db.session import SessionLocal
 from app.models.user import User
 from app.schemas.common import HealthResponse
 
@@ -49,13 +48,18 @@ def health_check() -> HealthResponse:
 
 
 @app.get("/make-admin")
-def make_admin(email: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == email).first()
+def make_admin(email: str):
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == email).first()
 
-    if not user:
-        return {"error": "User not found"}
+        if not user:
+            return {"error": "User not found"}
 
-    user.role = "admin"
-    db.commit()
+        user.role = "admin"
+        user.status = "active"
+        db.commit()
 
-    return {"message": f"{email} is now admin"}
+        return {"message": f"{email} is now admin"}
+    finally:
+        db.close()
